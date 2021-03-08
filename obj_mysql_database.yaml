@@ -1,0 +1,6 @@
+apiVersion: mysql.group/v1
+kind: Database
+metadata:
+  name: web-service-qa
+spec:
+  instance: red-instance

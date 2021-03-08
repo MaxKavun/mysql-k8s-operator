@@ -1,0 +1,6 @@
+apiVersion: mysql.group/v1
+kind: Instance
+metadata:
+  name: red-instance
+spec:
+  mysql_password: 12345
