@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kopf-operator
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      application: mysql-operator
+  template:
+    metadata:
+      labels:
+        application: mysql-operator
+    spec:
+      serviceAccountName: mysql-operator
+      containers:
+      - name: mysql-operator
+        image: public.ecr.aws/k8a2n9l0/agent:latest

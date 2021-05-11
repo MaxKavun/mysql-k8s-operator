@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: default
+  name: mysql-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: mysql-operator-role
+rules:
+  - apiGroups: ["mysql.group", "apps", ""]
+    resources: ["instances", "databases", "deployments", "services", "events", "jobs", "pods", "pods/exec"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: mysql-operator-cluster
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mysql-operator-role
+subjects:
+  - kind: ServiceAccount
+    namespace: default
+    name: mysql-operator
