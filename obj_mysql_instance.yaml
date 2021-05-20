@@ -3,4 +3,4 @@ kind: Instance
 metadata:
   name: red-instance
 spec:
-  mysql_password: 12345
+  mysql_password: "55554"

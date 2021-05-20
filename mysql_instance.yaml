@@ -21,7 +21,19 @@ spec:
         properties:
           spec:
             type: object
-            x-kubernetes-preserve-unknown-fields: true
-          status:
-            type: object
-            x-kubernetes-preserve-unknown-fields: true
+            properties:
+              mysql_password:
+                type: string
+              replicas:
+                type: integer
+                minimum: 1
+                maximum: 10
+                default: 1
+    additionalPrinterColumns:
+    - name: Replicas
+      type: string
+      description: The number of replicas
+      jsonPath: .spec.replicas
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp

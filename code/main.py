@@ -8,8 +8,6 @@ import yaml
 def create_fn(spec, name, namespace, logger, **kwargs):
   
   mysql_password = spec.get('mysql_password')
-  if not mysql_password:
-    raise kopf.PermanentError(f"Password should be set. Got null")
 
   deploy = os.path.join(os.path.dirname(__file__), "manifests/mysql.yaml")
   service = os.path.join(os.path.dirname(__file__), "manifests/mysql-svc.yaml")
@@ -43,8 +41,6 @@ def create_fn(spec, name, namespace, logger, **kwargs):
 def update_fn(spec, status, namespace, logger, **kwargs):
   
   mysql_password = spec.get('mysql_password', None)
-  if not mysql_password:
-    raise kopf.PermanentError("Password should be set. Got null")
   
   deploy_name = status['create_fn']['deploy-name']
   deploy_patch = {'spec': {'containers': [{"name": deploy_name, "env":[{'name': "MYSQL_ROOT_PASSWORD", 'value': mysql_password}]}]}}

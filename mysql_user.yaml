@@ -1,16 +1,16 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: databases.mysql.group
+  name: users.mysql.group
 spec:
   scope: Namespaced
   group: mysql.group
   names:
-    kind: Database
-    plural: databases
-    singular: database
+    kind: User
+    plural: users
+    singular: user
     shortNames:
-      - db
+      - user
   versions:
   - name: v1
     served: true
@@ -22,13 +22,13 @@ spec:
           spec:
             type: object
             properties:
-              instance:
+              server:
                 type: string
     additionalPrinterColumns:
-    - name: Instance
+    - name: Server
       type: string
-      description: The MySQL instance
-      jsonPath: .spec.instance
+      description: The server where user exists
+      jsonPath: .spec.server
     - name: Age
       type: date
       jsonPath: .metadata.creationTimestamp

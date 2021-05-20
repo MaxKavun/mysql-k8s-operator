@@ -1,16 +1,16 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: databases.mysql.group
+  name: permissions.mysql.group
 spec:
   scope: Namespaced
   group: mysql.group
   names:
-    kind: Database
-    plural: databases
-    singular: database
+    kind: Permission
+    plural: permissions
+    singular: permission
     shortNames:
-      - db
+      - pm
   versions:
   - name: v1
     served: true
@@ -22,13 +22,14 @@ spec:
           spec:
             type: object
             properties:
-              instance:
+              user:
                 type: string
+              permissions:
+                type: array
+                items:
+                  type: string
     additionalPrinterColumns:
-    - name: Instance
+    - name: User
       type: string
-      description: The MySQL instance
-      jsonPath: .spec.instance
-    - name: Age
-      type: date
-      jsonPath: .metadata.creationTimestamp
+      description: User that has these permissions
+      jsonPath: .spec.user
