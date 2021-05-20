@@ -1,0 +1,10 @@
+apiVersion: mysql.group/v1
+kind: Permissions
+metadata:
+  name: developer
+spec:
+  user: john
+  instance: red-instance
+  permissions:
+  - read
+  - write
