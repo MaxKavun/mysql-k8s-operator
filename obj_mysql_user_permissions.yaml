@@ -3,8 +3,8 @@ kind: Permissions
 metadata:
   name: developer
 spec:
-  user: john
+  userName: john
   instance: red-instance
   permissions:
-  - read
   - write
+  - read

@@ -22,7 +22,7 @@ spec:
           spec:
             type: object
             properties:
-              user:
+              userName:
                 type: string
               instance:
                 type: string
@@ -33,5 +33,10 @@ spec:
     additionalPrinterColumns:
     - name: User
       type: string
-      description: User that has these permissions
-      jsonPath: .spec.user
+      description: Username that has these permissions
+      jsonPath: .spec.userName
+    - name: Permissions
+      type: string
+      description: Permissions
+      jsonPath: .spec.permissions
+

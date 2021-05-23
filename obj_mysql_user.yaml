@@ -4,4 +4,5 @@ metadata:
   name: john
 spec:
   instance: red-instance
-  mysql_password: "12345"
+  userName: john
+  mysqlPassword: "12345"

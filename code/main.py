@@ -60,6 +60,7 @@ def create_db(spec, name, namespace, logger,  **kwargs):
   
   label_selector = "app=mysql"
   instance_name = spec.get('instance')
+  database_name = spec.get('databaseName')
   if not instance_name:
     raise kopf.PermanentError("Instance does not exist")
 
@@ -76,7 +77,7 @@ def create_db(spec, name, namespace, logger,  **kwargs):
     exec_command = [
     '/bin/sh',
     '-c',
-    "mysql -p${MYSQL_ROOT_PASSWORD} -e 'create database %s'" % (name,)
+    "mysql -p${MYSQL_ROOT_PASSWORD} -e 'create database %s'" % (database_name,)
     ]
 
     resp = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec, pod_name, namespace,
@@ -92,6 +93,7 @@ def delete_db(spec, name, namespace, logger, **kwargs):
   label_selector = "app=mysql"
 
   instance_name = spec.get('instance')
+  database_name = spec.get('databaseName')
   if not instance_name:
     raise kopf.PermanentError("Instance does not exist")
 
@@ -108,7 +110,7 @@ def delete_db(spec, name, namespace, logger, **kwargs):
     exec_command = [
     '/bin/sh',
     '-c',
-    'mysql -p${MYSQL_ROOT_PASSWORD} -e "drop database "' + name
+    'mysql -p${MYSQL_ROOT_PASSWORD} -e "drop database "' + database_name
     ]
 
     resp = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec, pod_name, namespace,
@@ -123,6 +125,8 @@ def create_user(spec, name, namespace, logger,  **kwargs):
 
   label_selector = "app=mysql"
   instance_name = spec.get('instance')
+  user_name = spec.get('userName')
+  mysql_password = spec.get('mysqlPassword')
   if not instance_name:
     raise kopf.PermanentError("Instance does not exist")
 
@@ -139,7 +143,7 @@ def create_user(spec, name, namespace, logger,  **kwargs):
     exec_command = [
     '/bin/sh',
     '-c',
-    'mysql -p${MYSQL_ROOT_PASSWORD} -e "CREATE USER \'vasya\'@\'%\' IDENTIFIED BY \'12345\'"'
+    'mysql -p${MYSQL_ROOT_PASSWORD} -e "CREATE USER \'' + user_name + '\'@\'%\' IDENTIFIED BY \'' + mysql_password + '\'"'
     ]
 
     resp = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec, name, namespace,
@@ -155,6 +159,7 @@ def delete_user(spec, name, namespace, logger, **kwargs):
   label_selector = "app=mysql"
 
   instance_name = spec.get('instance')
+  user_name = spec.get('userName')
   if not instance_name:
     raise kopf.PermanentError("Instance does not exist")
 
@@ -171,7 +176,7 @@ def delete_user(spec, name, namespace, logger, **kwargs):
     exec_command = [
     '/bin/sh',
     '-c',
-    'mysql -p${MYSQL_ROOT_PASSWORD} -e "DROP USER \'vasya\'@\'%\'"'
+    'mysql -p${MYSQL_ROOT_PASSWORD} -e "DROP USER \'' + user_name + '\'@\'%\'"'
     ]
 
     resp = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec, name, namespace,
@@ -186,11 +191,22 @@ def create_permissions(spec, name, namespace, logger,  **kwargs):
 
   label_selector = "app=mysql"
   instance_name = spec.get('instance')
-  user = spec.get('user')
+  user_name = spec.get('userName')
+  permissions = spec.get('permissions')
+  mysql_permissions = ""
+
+  if "read" in permissions:
+    mysql_permissions += "select"
+
+  if "write" in permissions:
+    if len(mysql_permissions) > 1:
+      mysql_permissions += ","
+    mysql_permissions += "insert,update,delete"
+
   if not instance_name:
     raise kopf.PermanentError("Instance does not exist")
 
-  if not user:
+  if not user_name:
     raise kopf.PermanentError("User does not exist")
 
   api = kubernetes.client.CoreV1Api()
@@ -206,7 +222,7 @@ def create_permissions(spec, name, namespace, logger,  **kwargs):
     exec_command = [
     '/bin/sh',
     '-c',
-    'mysql -p${MYSQL_ROOT_PASSWORD} -e "GRANT ALL PRIVILEGES ON *.* TO \'vasya\'@\'%\'"'
+    'mysql -p${MYSQL_ROOT_PASSWORD} -e "GRANT ' + mysql_permissions + ' ON *.* TO \'' + user_name + '\'@\'%\'"'
     ]
 
     resp = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec, name, namespace,
@@ -222,11 +238,12 @@ def delete_permissions(spec, name, namespace, logger, **kwargs):
   label_selector = "app=mysql"
 
   instance_name = spec.get('instance')
-  user = spec.get('user')
+  user_name = spec.get('userName')
+  permissions = spec.get('permissions')
   if not instance_name:
     raise kopf.PermanentError("Instance does not exist")
   
-  if not user:
+  if not user_name:
     raise kopf.PermanentError("User does not exist")
 
   api = kubernetes.client.CoreV1Api()
@@ -242,7 +259,7 @@ def delete_permissions(spec, name, namespace, logger, **kwargs):
     exec_command = [
     '/bin/sh',
     '-c',
-    'mysql -p${MYSQL_ROOT_PASSWORD} -e "REVOKE ALL PRIVILEGES ON *.* FROM \'vasya\'@\'%\'"'
+    'mysql -p${MYSQL_ROOT_PASSWORD} -e "REVOKE ALL PRIVILEGES ON *.* FROM \'' + user_name + '\'@\'%\'"'
     ]
 
     resp = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec, name, namespace,

@@ -24,11 +24,17 @@ spec:
             properties:
               instance:
                 type: string
+              databaseName:
+                type: string
     additionalPrinterColumns:
     - name: Instance
       type: string
       description: The MySQL instance
       jsonPath: .spec.instance
+    - name: DatabaseName
+      type: string
+      description: The Database name
+      jsonPath: .spec.databaseName
     - name: Age
       type: date
       jsonPath: .metadata.creationTimestamp
