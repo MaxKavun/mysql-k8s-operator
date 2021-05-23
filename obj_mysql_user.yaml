@@ -3,5 +3,5 @@ kind: User
 metadata:
   name: john
 spec:
-  mysql_password: 12345
   instance: red-instance
+  mysql_password: "12345"

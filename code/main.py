@@ -68,18 +68,18 @@ def create_db(spec, name, namespace, logger,  **kwargs):
   resp = api.list_namespaced_pod(namespace=namespace, label_selector=label_selector)
 
   for x in resp.items:
-    name = x.metadata.name
+    pod_name = x.metadata.name
     logger.info(name)
 
-    resp = api.read_namespaced_pod(name=name, namespace=namespace)
+    resp = api.read_namespaced_pod(name=pod_name, namespace=namespace)
 
     exec_command = [
     '/bin/sh',
     '-c',
-    'mysql -p12345 -e "create database prikol"'
+    "mysql -p${MYSQL_ROOT_PASSWORD} -e 'create database %s'" % (name,)
     ]
 
-    resp = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec, name, namespace,
+    resp = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec, pod_name, namespace,
                           command=exec_command,
                           stderr=True, stdin=False,
                           stdout=True, tty=False)
@@ -100,6 +100,37 @@ def delete_db(spec, name, namespace, logger, **kwargs):
   resp = api.list_namespaced_pod(namespace=namespace, label_selector=label_selector)
 
   for x in resp.items:
+    pod_name = x.metadata.name
+    logger.info(name)
+
+    resp = api.read_namespaced_pod(name=pod_name, namespace=namespace)
+
+    exec_command = [
+    '/bin/sh',
+    '-c',
+    'mysql -p${MYSQL_ROOT_PASSWORD} -e "drop database "' + name
+    ]
+
+    resp = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec, pod_name, namespace,
+                          command=exec_command,
+                          stderr=True, stdin=False,
+                          stdout=True, tty=False)
+
+    logger.info(resp)
+
+@kopf.on.create('users')
+def create_user(spec, name, namespace, logger,  **kwargs):
+
+  label_selector = "app=mysql"
+  instance_name = spec.get('instance')
+  if not instance_name:
+    raise kopf.PermanentError("Instance does not exist")
+
+  api = kubernetes.client.CoreV1Api()
+
+  resp = api.list_namespaced_pod(namespace=namespace, label_selector=label_selector)
+
+  for x in resp.items:
     name = x.metadata.name
     logger.info(name)
 
@@ -108,7 +139,110 @@ def delete_db(spec, name, namespace, logger, **kwargs):
     exec_command = [
     '/bin/sh',
     '-c',
-    'mysql -p12345 -e "drop database prikol"'
+    'mysql -p${MYSQL_ROOT_PASSWORD} -e "CREATE USER \'vasya\'@\'%\' IDENTIFIED BY \'12345\'"'
+    ]
+
+    resp = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec, name, namespace,
+                          command=exec_command,
+                          stderr=True, stdin=False,
+                          stdout=True, tty=False)
+
+    logger.info(resp)
+
+@kopf.on.delete('users')
+def delete_user(spec, name, namespace, logger, **kwargs):
+
+  label_selector = "app=mysql"
+
+  instance_name = spec.get('instance')
+  if not instance_name:
+    raise kopf.PermanentError("Instance does not exist")
+
+  api = kubernetes.client.CoreV1Api()
+
+  resp = api.list_namespaced_pod(namespace=namespace, label_selector=label_selector)
+
+  for x in resp.items:
+    name = x.metadata.name
+    logger.info(name)
+
+    resp = api.read_namespaced_pod(name=name, namespace=namespace)
+
+    exec_command = [
+    '/bin/sh',
+    '-c',
+    'mysql -p${MYSQL_ROOT_PASSWORD} -e "DROP USER \'vasya\'@\'%\'"'
+    ]
+
+    resp = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec, name, namespace,
+                          command=exec_command,
+                          stderr=True, stdin=False,
+                          stdout=True, tty=False)
+
+    logger.info(resp)
+
+@kopf.on.create('permissions')
+def create_permissions(spec, name, namespace, logger,  **kwargs):
+
+  label_selector = "app=mysql"
+  instance_name = spec.get('instance')
+  user = spec.get('user')
+  if not instance_name:
+    raise kopf.PermanentError("Instance does not exist")
+
+  if not user:
+    raise kopf.PermanentError("User does not exist")
+
+  api = kubernetes.client.CoreV1Api()
+
+  resp = api.list_namespaced_pod(namespace=namespace, label_selector=label_selector)
+
+  for x in resp.items:
+    name = x.metadata.name
+    logger.info(name)
+
+    resp = api.read_namespaced_pod(name=name, namespace=namespace)
+
+    exec_command = [
+    '/bin/sh',
+    '-c',
+    'mysql -p${MYSQL_ROOT_PASSWORD} -e "GRANT ALL PRIVILEGES ON *.* TO \'vasya\'@\'%\'"'
+    ]
+
+    resp = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec, name, namespace,
+                          command=exec_command,
+                          stderr=True, stdin=False,
+                          stdout=True, tty=False)
+
+    logger.info(resp)
+
+@kopf.on.delete('permissions')
+def delete_permissions(spec, name, namespace, logger, **kwargs):
+
+  label_selector = "app=mysql"
+
+  instance_name = spec.get('instance')
+  user = spec.get('user')
+  if not instance_name:
+    raise kopf.PermanentError("Instance does not exist")
+  
+  if not user:
+    raise kopf.PermanentError("User does not exist")
+
+  api = kubernetes.client.CoreV1Api()
+
+  resp = api.list_namespaced_pod(namespace=namespace, label_selector=label_selector)
+
+  for x in resp.items:
+    name = x.metadata.name
+    logger.info(name)
+
+    resp = api.read_namespaced_pod(name=name, namespace=namespace)
+
+    exec_command = [
+    '/bin/sh',
+    '-c',
+    'mysql -p${MYSQL_ROOT_PASSWORD} -e "REVOKE ALL PRIVILEGES ON *.* FROM \'vasya\'@\'%\'"'
     ]
 
     resp = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec, name, namespace,

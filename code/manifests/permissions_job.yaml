@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: add-permissions-{user}
+spec:
+  template:
+    spec:
+      containers:
+      - name: init
+        image: mysql
+        command:
+        - sh
+        - -c
+        - >
+           mysql -h {instance} -p 123456;
+           CREATE DATABASE test;
+      restartPolicy: Never

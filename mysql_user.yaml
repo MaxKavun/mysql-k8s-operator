@@ -22,13 +22,15 @@ spec:
           spec:
             type: object
             properties:
-              server:
+              instance:
+                type: string
+              mysql_password:
                 type: string
     additionalPrinterColumns:
     - name: Server
       type: string
       description: The server where user exists
-      jsonPath: .spec.server
+      jsonPath: .spec.instance
     - name: Age
       type: date
       jsonPath: .metadata.creationTimestamp

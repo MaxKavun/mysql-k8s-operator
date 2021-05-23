@@ -6,7 +6,7 @@ spec:
   scope: Namespaced
   group: mysql.group
   names:
-    kind: Permission
+    kind: Permissions
     plural: permissions
     singular: permission
     shortNames:
@@ -23,6 +23,8 @@ spec:
             type: object
             properties:
               user:
+                type: string
+              instance:
                 type: string
               permissions:
                 type: array
