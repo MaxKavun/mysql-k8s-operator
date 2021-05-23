@@ -1,0 +1,8 @@
+apiVersion: mysql.group/v1
+kind: Backup
+metadata:
+  name: web-service-qa-dec-20
+spec:
+  instance: red-instance
+  databaseName: web_service_qa
+  s3Bucket: max2021test

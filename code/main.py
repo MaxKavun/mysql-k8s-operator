@@ -2,6 +2,9 @@ import kopf
 import os
 import kubernetes
 import yaml
+import subprocess
+import boto3
+from botocore.exceptions import ClientError
 
 
 @kopf.on.create('instances')
@@ -10,7 +13,7 @@ def create_fn(spec, name, namespace, logger, **kwargs):
   mysql_password = spec.get('mysql_password')
 
   deploy = os.path.join(os.path.dirname(__file__), "manifests/mysql.yaml")
-  service = os.path.join(os.path.dirname(__file__), "manifests/mysql-svc.yaml")
+  service = os.path.join(os.path.dirname(__file__), "manifests/mysql_svc.yaml")
   svc_tmpl = open(service, 'rt').read()
   deploy_tmpl = open(deploy, 'rt').read()
   deploy_text = deploy_tmpl.format(name=name, mysql_password=mysql_password)
@@ -268,3 +271,67 @@ def delete_permissions(spec, name, namespace, logger, **kwargs):
                           stdout=True, tty=False)
 
     logger.info(resp)
+
+@kopf.on.create('backups')
+def create_backup(spec, name, namespace, logger,  **kwargs):
+  
+  label_selector = "app=mysql"
+  instance_name = spec.get('instance')
+  database_name = spec.get('databaseName')
+  s3_bucket = spec.get('s3Bucket')
+
+  if not instance_name:
+    raise kopf.PermanentError("Instance does not exist")
+
+  api = kubernetes.client.CoreV1Api()
+
+  resp = api.list_namespaced_pod(namespace=namespace, label_selector=label_selector)
+
+  for x in resp.items:
+    pod_name = x.metadata.name
+    logger.info(name)
+
+    resp = api.read_namespaced_pod(name=pod_name, namespace=namespace)
+
+    exec_command = [
+    '/bin/sh',
+    '-c',
+    "mysqldump -u root -p${MYSQL_ROOT_PASSWORD} %s > dump.sql" % (database_name,)
+    ]
+
+    resp = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec, pod_name, namespace,
+                          command=exec_command,
+                          stderr=True, stdin=False,
+                          stdout=True, tty=False)
+
+    exportSql = f"kubectl exec {pod_name} -- cat dump.sql > local_dump.sql"
+    process = subprocess.Popen(exportSql.split(), stdout=subprocess.PIPE)
+    output, error = process.communicate()
+    s3_client = boto3.client('s3')
+    temp_file = open("dump.sql", "w")
+    temp_file.write(output.decode("utf-8"))
+    temp_file.close()
+    try:
+        response = s3_client.upload_file("dump.sql", s3_bucket, f"{database_name}-dump.sql")
+    except ClientError as e:
+        logger.error(e)
+
+    logger.info(resp)
+
+@kopf.on.delete('backups')
+def delete_permissions(spec, name, namespace, logger, **kwargs):
+
+  label_selector = "app=mysql"
+
+  instance_name = spec.get('instance')
+  database_name = spec.get('databaseName')
+  s3_bucket = spec.get('s3Bucket')
+
+  if not instance_name:
+    raise kopf.PermanentError("Instance does not exist")
+
+  s3_client = boto3.client('s3')
+
+  response = s3_client.delete_object(Bucket=s3_bucket,Key=f"{database_name}-dump.sql")
+
+  logger.info(response)

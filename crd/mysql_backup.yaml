@@ -1,0 +1,46 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: backups.mysql.group
+spec:
+  scope: Namespaced
+  group: mysql.group
+  names:
+    kind: Backup
+    plural: backups
+    singular: backup
+    shortNames:
+      - backup
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              instance:
+                type: string
+              databaseName:
+                type: string
+              s3Bucket:
+                type: string
+    additionalPrinterColumns:
+    - name: Instance
+      type: string
+      description: The MySQL instance
+      jsonPath: .spec.instance
+    - name: DatabaseName
+      type: string
+      description: The Database name
+      jsonPath: .spec.databaseName
+    - name: S3Bucket
+      type: string
+      description: Bucket where backup is stored
+      jsonPath: .spec.s3Bucket
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
