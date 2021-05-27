@@ -1,7 +1,7 @@
 apiVersion: mysql.group/v1
 kind: Database
 metadata:
-  name: web-service-qa
+  name: web-service-dev
 spec:
   instance: red-instance
   databaseName: web_service_qa

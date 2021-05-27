@@ -12,6 +12,9 @@ def create_fn(spec, name, namespace, logger, labels, **kwargs):
   
   mysql_password = spec.get('mysql_password')
 
+  if not mysql_password:
+    raise kopf.PermanentError("MySQL password wasn't defined")
+
   deploy = os.path.join(os.path.dirname(__file__), "manifests/mysql.yaml")
   service = os.path.join(os.path.dirname(__file__), "manifests/mysql_svc.yaml")
   svc_tmpl = open(service, 'rt').read()
@@ -68,6 +71,9 @@ def create_db(spec, name, namespace, logger,  **kwargs):
   if not instance_name:
     raise kopf.PermanentError("Instance does not exist")
 
+  if not database_name:
+    raise kopf.PermanentError("You should put database name")
+
   api = kubernetes.client.CoreV1Api()
 
   resp = api.list_namespaced_pod(namespace=namespace, label_selector=label_selector)
@@ -101,6 +107,9 @@ def delete_db(spec, name, namespace, logger, **kwargs):
   if not instance_name:
     raise kopf.PermanentError("Instance does not exist")
 
+  if not database_name:
+    raise kopf.PermanentError("You should put database name")
+
   api = kubernetes.client.CoreV1Api()
 
   resp = api.list_namespaced_pod(namespace=namespace, label_selector=label_selector)
@@ -133,6 +142,10 @@ def create_user(spec, name, namespace, logger,  **kwargs):
   mysql_password = spec.get('mysqlPassword')
   if not instance_name:
     raise kopf.PermanentError("Instance does not exist")
+  if not user_name:
+    raise kopf.PermanentError("You should define user name")
+  if not mysql_password:
+    raise kopf.PermanentError("You should define password")
 
   api = kubernetes.client.CoreV1Api()
 
@@ -166,6 +179,8 @@ def delete_user(spec, name, namespace, logger, **kwargs):
   user_name = spec.get('userName')
   if not instance_name:
     raise kopf.PermanentError("Instance does not exist")
+  if not user_name:
+    raise kopf.PermanentError("You should define user name")
 
   api = kubernetes.client.CoreV1Api()
 
@@ -197,6 +212,14 @@ def create_permissions(spec, name, namespace, logger,  **kwargs):
   instance_name = spec.get('instance')
   user_name = spec.get('userName')
   permissions = spec.get('permissions')
+
+  if not instance_name:
+    raise kopf.PermanentError("Instance does not exist")
+  if not user_name:
+    raise kopf.PermanentError("You should define user name")
+  if not permissions:
+    raise kopf.PermanentError("You should define permissions")
+
   mysql_permissions = ""
 
   if "read" in permissions:
@@ -243,7 +266,6 @@ def delete_permissions(spec, name, namespace, logger, **kwargs):
 
   instance_name = spec.get('instance')
   user_name = spec.get('userName')
-  permissions = spec.get('permissions')
   if not instance_name:
     raise kopf.PermanentError("Instance does not exist")
   
@@ -283,6 +305,12 @@ def create_backup(spec, name, namespace, logger,  **kwargs):
 
   if not instance_name:
     raise kopf.PermanentError("Instance does not exist")
+
+  if not database_name:
+    raise kopf.PermanentError("Instance does not exist")
+
+  if not s3_bucket:
+    raise kopf.PermanentError("You should specify S3 Bucket")
 
   api = kubernetes.client.CoreV1Api()
 
@@ -325,6 +353,15 @@ def delete_permissions(spec, name, namespace, logger, **kwargs):
   instance_name = spec.get('instance')
   database_name = spec.get('databaseName')
   s3_bucket = spec.get('s3Bucket')
+
+  if not instance_name:
+    raise kopf.PermanentError("Instance does not exist")
+
+  if not database_name:
+    raise kopf.PermanentError("Instance does not exist")
+
+  if not s3_bucket:
+    raise kopf.PermanentError("You should specify S3 Bucket")
 
   if not instance_name:
     raise kopf.PermanentError("Instance does not exist")

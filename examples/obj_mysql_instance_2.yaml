@@ -1,8 +1,9 @@
 apiVersion: mysql.group/v1
 kind: Instance
 metadata:
-  name: red-instance
+  name: white-instance
   labels:
-    app: red
+    app: white
     disk: ssd
 spec:
+  mysql_password: "112233"
