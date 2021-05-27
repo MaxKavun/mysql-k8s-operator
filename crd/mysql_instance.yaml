@@ -29,6 +29,10 @@ spec:
                 minimum: 1
                 maximum: 10
                 default: 1
+              labels:
+                type: string
+                items:
+                  type: string
     additionalPrinterColumns:
     - name: Replicas
       type: string

@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 
 
 @kopf.on.create('instances')
-def create_fn(spec, name, namespace, logger, **kwargs):
+def create_fn(spec, name, namespace, logger, labels, **kwargs):
   
   mysql_password = spec.get('mysql_password')
 
@@ -19,6 +19,7 @@ def create_fn(spec, name, namespace, logger, **kwargs):
   deploy_text = deploy_tmpl.format(name=name, mysql_password=mysql_password)
   svc_text = svc_tmpl.format(name=name)
   deploy_data = yaml.safe_load(deploy_text)
+  print(deploy_data["metadata"])
   svc_data = yaml.safe_load(svc_text)
 
   kopf.adopt(deploy_data)
@@ -61,7 +62,7 @@ def update_fn(spec, status, namespace, logger, **kwargs):
 @kopf.on.create('databases')
 def create_db(spec, name, namespace, logger,  **kwargs):
   
-  label_selector = "app=mysql"
+  label_selector = f"app={spec.get('instance')}"
   instance_name = spec.get('instance')
   database_name = spec.get('databaseName')
   if not instance_name:
@@ -93,7 +94,7 @@ def create_db(spec, name, namespace, logger,  **kwargs):
 @kopf.on.delete('databases')
 def delete_db(spec, name, namespace, logger, **kwargs):
 
-  label_selector = "app=mysql"
+  label_selector = f"app={spec.get('instance')}"
 
   instance_name = spec.get('instance')
   database_name = spec.get('databaseName')
@@ -126,7 +127,7 @@ def delete_db(spec, name, namespace, logger, **kwargs):
 @kopf.on.create('users')
 def create_user(spec, name, namespace, logger,  **kwargs):
 
-  label_selector = "app=mysql"
+  label_selector = f"app={spec.get('instance')}"
   instance_name = spec.get('instance')
   user_name = spec.get('userName')
   mysql_password = spec.get('mysqlPassword')
@@ -159,7 +160,7 @@ def create_user(spec, name, namespace, logger,  **kwargs):
 @kopf.on.delete('users')
 def delete_user(spec, name, namespace, logger, **kwargs):
 
-  label_selector = "app=mysql"
+  label_selector = f"app={spec.get('instance')}"
 
   instance_name = spec.get('instance')
   user_name = spec.get('userName')
@@ -192,7 +193,7 @@ def delete_user(spec, name, namespace, logger, **kwargs):
 @kopf.on.create('permissions')
 def create_permissions(spec, name, namespace, logger,  **kwargs):
 
-  label_selector = "app=mysql"
+  label_selector = f"app={spec.get('instance')}"
   instance_name = spec.get('instance')
   user_name = spec.get('userName')
   permissions = spec.get('permissions')
@@ -238,7 +239,7 @@ def create_permissions(spec, name, namespace, logger,  **kwargs):
 @kopf.on.delete('permissions')
 def delete_permissions(spec, name, namespace, logger, **kwargs):
 
-  label_selector = "app=mysql"
+  label_selector = f"app={spec.get('instance')}"
 
   instance_name = spec.get('instance')
   user_name = spec.get('userName')
@@ -275,7 +276,7 @@ def delete_permissions(spec, name, namespace, logger, **kwargs):
 @kopf.on.create('backups')
 def create_backup(spec, name, namespace, logger,  **kwargs):
   
-  label_selector = "app=mysql"
+  label_selector = f"app={spec.get('instance')}"
   instance_name = spec.get('instance')
   database_name = spec.get('databaseName')
   s3_bucket = spec.get('s3Bucket')
@@ -320,8 +321,6 @@ def create_backup(spec, name, namespace, logger,  **kwargs):
 
 @kopf.on.delete('backups')
 def delete_permissions(spec, name, namespace, logger, **kwargs):
-
-  label_selector = "app=mysql"
 
   instance_name = spec.get('instance')
   database_name = spec.get('databaseName')

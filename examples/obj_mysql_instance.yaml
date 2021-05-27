@@ -2,5 +2,8 @@ apiVersion: mysql.group/v1
 kind: Instance
 metadata:
   name: red-instance
+  labels:
+    app: red
+    disk: ssd
 spec:
   mysql_password: "55554"

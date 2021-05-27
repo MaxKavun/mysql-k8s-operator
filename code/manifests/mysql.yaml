@@ -6,13 +6,13 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: mysql
+      app: "{name}"
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: mysql
+        app: "{name}"
     spec:
       containers:
       - image: mysql:5.6
